@@ -2281,7 +2281,7 @@ static int add_string_completion(zhandle_t *zh, int xid,
     return add_completion(zh, xid, COMPLETION_STRING, dc, data, 0,0);
 }
 
-int zookeeper_close(zhandle_t *zh)
+int close_or_drop(zhandle_t *zh, int close_session)
 {
     int rc=ZOK;
     if (zh==0)
@@ -2297,7 +2297,7 @@ int zookeeper_close(zhandle_t *zh)
         adaptor_finish(zh);
         return ZOK;
     }
-    if(zh->state==ZOO_CONNECTED_STATE){
+    if((zh->state==ZOO_CONNECTED_STATE) && (close_session == 1)){
         struct oarchive *oa;
         struct RequestHeader h = { .xid = get_xid(), .type = CLOSE_OP};
         LOG_INFO(("Closing zookeeper sessionId=%#llx to [%s]\n",
@@ -2327,6 +2327,17 @@ finish:
     adaptor_destroy(zh);
     free(zh);
     return rc;
+}
+
+
+int zookeeper_close(zhandle_t *zh)
+{
+        return close_or_drop(zh, 1);
+}
+
+int zookeeper_drop(zhandle_t *zh)
+{
+        return close_or_drop(zh, 0);
 }
 
 static int isValidPath(const char* path, const int flags) {

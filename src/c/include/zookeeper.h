@@ -338,6 +338,32 @@ ZOOAPI zhandle_t *zookeeper_init(const char *host, watcher_fn fn,
 ZOOAPI int zookeeper_close(zhandle_t *zh);
 
 /**
+ * \brief close the zookeeper handle and free up any resources.
+ * 
+ * After this call, the client session be valid up until the negotiated timeout
+ * with the server. The function will flush any outstanding send requests
+ * before return. As a result it may block.
+ *
+ * This differs from zookeeper_close, in that it allows the session to be resumed.
+ *
+ * This method should only be called only once on a zookeeper handle. Calling
+ * twice will cause undefined (and probably undesirable behavior). Calling any other
+ * zookeeper method after calling close is undefined behaviour and should be avoided.
+ *
+ * \param zh the zookeeper handle obtained by a call to \ref zookeeper_init
+ * \return a result code. Regardless of the error code returned, the zhandle 
+ * will be destroyed and all resources freed. 
+ *
+ * ZOK - success
+ * ZBADARGUMENTS - invalid input parameters
+ * ZOPERATIONTIMEOUT - failed to flush the buffers within the specified timeout.
+ * ZCONNECTIONLOSS - a network error occured while attempting to send request to server
+ * ZSYSTEMERROR -- a system (OS) error occured; it's worth checking errno to get details
+ */
+ZOOAPI int zookeeper_drop(zhandle_t *zh);
+
+
+/**
  * \brief return the client session id, only valid if the connections
  * is currently connected (ie. last watcher state is ZOO_CONNECTED_STATE)
  */
